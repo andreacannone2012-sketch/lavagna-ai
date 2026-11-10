@@ -13,5 +13,5 @@ services:
       - GEMINI_API_KEY=incolla-qui-la-chiave
       # Opzionale: riserva per le domande senza foto
       - GROQ_API_KEY=
-      - GEMINI_MODEL=gemini-2.5-flash
+      - GEMINI_MODEL=gemini-3.8-flash,gemini-3.5-flash-lite
       - GROQ_MODEL=openai/gpt-oss-120b
