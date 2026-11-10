@@ -1,0 +1,17 @@
+services:
+  lavagna-ai:
+    # Sostituisci OWNER/REPO con utente/nome-repository GitHub, tutto in minuscolo
+    image: ghcr.io/OWNER/REPO:latest
+    container_name: lavagna-ai
+    restart: unless-stopped
+    ports:
+      # 8430 fuori, 3000 dentro: cosi non va in conflitto con immich-kiosk
+      - "8430:3000"
+    environment:
+      # Chiave gratuita da Google AI Studio. Scrivila SOLO nella copia che incolli in ZimaOS,
+      # mai nel file caricato su GitHub.
+      - GEMINI_API_KEY=incolla-qui-la-chiave
+      # Opzionale: riserva per le domande senza foto
+      - GROQ_API_KEY=
+      - GEMINI_MODEL=gemini-2.5-flash
+      - GROQ_MODEL=openai/gpt-oss-120b

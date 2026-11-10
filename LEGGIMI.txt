@@ -1,0 +1,33 @@
+LAVAGNA AI - istruzioni rapide (via GitHub + GUI ZimaOS)
+=========================================================
+
+Stesso sistema di dashboard-bridge: GitHub costruisce l'immagine Docker
+e la pubblica su ghcr.io, la GUI di ZimaOS scarica quella.
+
+PASSO 1 - Crea il repository
+   - github.com > New repository (es. "lavagna-ai")
+   - Carica TUTTO il contenuto della cartella, compresa la cartella
+     nascosta .github/workflows e la cartella public
+
+PASSO 2 - Build automatica
+   - Scheda "Actions": il workflow parte da solo, 1-2 minuti
+   - Se il job fallisce, apri il log e mandamelo
+
+PASSO 3 - Pacchetto pubblico
+   - GitHub > profilo > Packages > lavagna-ai > Package settings
+     > Change visibility > Public
+
+PASSO 4 - Prepara il docker-compose.yml
+   - Sostituisci OWNER/REPO con "tuo-utente/lavagna-ai" (minuscolo)
+   - Scrivi la chiave in GEMINI_API_KEY solo nella copia che incolli
+     in ZimaOS, NON nel file caricato su GitHub
+
+PASSO 5 - Incolla in ZimaOS
+   - GUI ZimaOS > Docker/Compose > incolla il docker-compose.yml
+   - Apri http://IP-DEL-NAS:8430
+
+NOTE
+   - La porta e 8430 per non sovrapporsi a immich-kiosk (3000)
+   - Aggiornamenti: carica i file nuovi su GitHub, aspetta la build,
+     poi in ZimaOS aggiorna/ricrea il container per scaricare :latest
+   - Il microfono richiede HTTPS; voce, scrittura e foto funzionano in http
