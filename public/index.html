@@ -1,0 +1,131 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lavagna AI</title>
+<link rel="stylesheet" href="/fonts/caveat/latin-600.css">
+<link rel="stylesheet" href="/fonts/patrick-hand/latin-400.css">
+<style>
+:root{--bg:#f5f2e9;--dot:#d9d3c2;--ink:#1f2430;--pu:#2f55b5;--hl:#f7e08a}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--dot:#2c2f37;--ink:#e9e6dd;--pu:#8fb0ff}}
+:root[data-theme="dark"]{--bg:#15171c;--dot:#2c2f37;--ink:#e9e6dd;--pu:#8fb0ff}
+html,body,#root{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Patrick Hand',sans-serif;overflow:hidden}
+#board{position:absolute;inset:0;overflow-y:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 100px) 22px 170px;background-image:radial-gradient(var(--dot) 1.3px,transparent 1.4px);background-size:26px 26px}
+.in{max-width:640px;margin:0 auto;position:relative}
+.t{font:600 48px/1.1 Caveat,cursive;display:inline-block;margin-bottom:8px}
+.ul{display:block;width:100%;height:12px}.ul path{stroke-dasharray:1;stroke-dashoffset:1;animation:dr .5s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+.x{font:600 36px/1.3 Caveat,cursive;margin:8px 0}.x.small{font-size:27px}
+.n{font:400 23px 'Patrick Hand';margin-left:8px}.al{width:34px;height:20px;vertical-align:middle;margin-left:10px}
+.pu{color:var(--pu)}.hl{background:var(--hl);color:#1d4d2e;display:inline-block;padding:0 12px;border-radius:4px 9px 6px 11px}
+.bx{width:max-content;max-width:92%;box-sizing:border-box;margin:6px auto;padding:12px 22px;border:2.5px solid var(--ink);border-radius:14px 10px 16px 11px/11px 16px 10px 14px;font:400 24px 'Patrick Hand';text-align:center;animation:pop .3s}
+@keyframes pop{from{opacity:0;transform:scale(.97)}}
+.ar{display:block;margin:0 auto;height:26px;width:20px}
+sup{font-size:.6em;vertical-align:.55em}
+.cr{display:inline-block;width:0;height:1em}
+#pen{position:absolute;left:0;top:30px;pointer-events:none;z-index:4;color:var(--ink);transition:transform .09s linear}
+#pen svg{display:block;margin:-40px 0 0 -4px}
+#pen b{position:absolute;left:16px;top:10px;color:var(--pu);font:400 17px 'Patrick Hand'}
+.tb{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 14px);left:14px;right:14px;display:flex;gap:10px;align-items:center}
+.rb{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);display:grid;place-items:center;padding:0;flex:none}
+.rb:disabled{opacity:.35}
+.av{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;flex:none}
+.wv{display:flex;gap:3px;align-items:center;height:20px}.wv i{width:3px;height:5px;background:var(--ink);border-radius:2px}
+.av.on .wv i{animation:wv .9s ease-in-out infinite}.av.on .wv i:nth-child(2){animation-delay:.15s}.av.on .wv i:nth-child(3){animation-delay:.3s}
+@keyframes wv{50%{height:18px}}
+.bot{position:fixed;z-index:6;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
+.row{display:flex;gap:10px;align-items:center}
+.inp{flex:1;display:flex;align-items:center;gap:2px;background:var(--bg);border:1.5px solid var(--ink);border-radius:26px;padding:3px 4px 3px 18px;min-width:0}
+.inp input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--ink);font:19px 'Patrick Hand',sans-serif}
+.inp input::placeholder{color:var(--ink);opacity:.45}
+.ib{width:40px;height:40px;display:grid;place-items:center;color:var(--ink);background:none;border:0;padding:0}
+.snd{width:40px;height:40px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:grid;place-items:center;padding:0}
+.fu{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;align-items:flex-start}
+.fu button{text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--ink);border-radius:8px;padding:8px 14px;font:400 20px 'Patrick Hand'}
+.seg{position:fixed;z-index:6;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);display:flex;gap:6px;align-items:center;background:var(--bg);color:var(--ink);border:1.5px solid var(--ink);border-radius:99px;padding:7px 14px 7px 10px;font:400 18px 'Patrick Hand'}
+.seg svg{width:20px;height:20px}
+button:focus-visible{outline:2px solid var(--pu);outline-offset:2px}
+.msg{font:400 24px 'Patrick Hand';opacity:.75}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+
+.sp{font:700 14px system-ui,sans-serif}
+@media(orientation:landscape) and (max-height:520px){
+#board{padding:calc(env(safe-area-inset-top,0px) + 66px) calc(env(safe-area-inset-right,0px) + 24px) 112px calc(env(safe-area-inset-left,0px) + 24px)}
+.in{max-width:880px}
+.tb{top:calc(env(safe-area-inset-top,0px) + 8px);left:calc(env(safe-area-inset-left,0px) + 14px);right:calc(env(safe-area-inset-right,0px) + 14px)}
+.rb,.av{width:40px;height:40px}
+.bot{left:calc(env(safe-area-inset-left,0px) + 14px);right:calc(env(safe-area-inset-right,0px) + 14px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+.t{font-size:40px}.x{font-size:30px}.bx{font-size:21px;padding:8px 18px}
+.fu{flex-direction:row;flex-wrap:wrap;margin-bottom:6px}.fu button{font-size:17px;padding:4px 10px}
+.seg{bottom:calc(env(safe-area-inset-bottom,0px) + 70px)}
+}
+</style></head><body><div id="root"></div>
+<script src="/vendor/react.js"></script><script src="/vendor/react-dom.js"></script><script src="/vendor/htm.js"></script>
+<script>
+const {useState,useRef,useLayoutEffect}=React,html=htm.bind(React.createElement),sleep=ms=>new Promise(r=>setTimeout(r,ms)),P={"x": "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z", "von": "M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z", "voff": "M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z", "pause": "M6 19h4V5H6v14zm8-14v14h4V5h-4z", "play": "M8 5v14l11-7z", "mic": "M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z", "cam": "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z", "send": "M2.01 21 23 12 2.01 3 2 10l15 2-15 2z", "down": "M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"},ic=d=>html`<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d=${d}/></svg>`;
+const fmt=s=>s.split(/(\^[0-9a-z]+)/gi).map((p,i)=>p[0]==='^'&&p.length>1?html`<sup key=${i}>${p.slice(1)}</sup>`:p);
+const AL=html`<svg class="al" viewBox="0 0 34 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M32 10H3M10 3L3 10l7 7"/></svg>`;
+function Block({b,caret}){
+  const n=b.shown,len=b.text.length,a=b.text.slice(0,n),nt=(b.note||'').slice(0,Math.max(0,n-len));
+  const c=caret?html`<i class="cr" ref=${caret}></i>`:null;
+  if(b.t==='box')return html`<div>${b.arrow&&html`<svg class="ar" viewBox="0 0 20 26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 1v22M4 17l6 7 6-7"/></svg>`}<div class="bx">${fmt(a)}${c}</div></div>`;
+  if(b.t==='title')return html`<div class="t">${fmt(a)}${c}${n>=len&&html`<svg class="ul" viewBox="0 0 300 12" preserveAspectRatio="none"><path pathLength="1" d="M3 8Q80 2 150 7T297 5" stroke="var(--pu)" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`}</div>`;
+  return html`<div><div class="x ${b.t==='small'?'small':''} ${b.t==='hl'?'hl':b.c||''}">${fmt(a)}${n>=len&&b.note?AL:null}${nt&&html`<span class="n">${nt}</span>`}${c}</div></div>`;
+}
+async function prep(f){const b=await createImageBitmap(f),k=Math.min(1,1280/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=b.width*k;c.height=b.height*k;c.getContext('2d').drawImage(b,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85)}
+function App(){
+  const [bl,setBl]=useState([]),[fu,setFu]=useState([]),[msg,setMsg]=useState('Chiedi un argomento, per esempio: i monomi.'),[inp,setInp]=useState(''),[pa,setPa]=useState(false),[mu,setMu]=useState(false),[run,setRun]=useState(false),[fol,setFol]=useState(true);
+  const [sp,setSp]=useState(()=>{try{return +localStorage.getItem('sp')||1}catch(e){return 1}}),spR=useRef(sp);
+  const tok=useRef(0),uid=useRef(0),paR=useRef(false),muR=useRef(false),folR=useRef(true),ttl=useRef(''),bd=useRef(),inn=useRef(),pen=useRef(),car=useRef();
+  useLayoutEffect(()=>{const c=car.current,p=pen.current;if(!c||!p||!c.isConnected)return;
+    const a=c.getBoundingClientRect(),o=inn.current.getBoundingClientRect();
+    p.style.transform=`translate(${a.left-o.left}px,${a.top-o.top}px)`;
+    if(folR.current){const t=bd.current,y=a.top-t.getBoundingClientRect().top;if(y>t.clientHeight*.7)t.scrollBy({top:y-t.clientHeight*.4})}},[bl]);
+  const talk=t=>new Promise(res=>{const S=window.speechSynthesis;if(muR.current||!S)return res();const u=new SpeechSynthesisUtterance(t);u.lang='it-IT';u.rate=.95*spR.current;const v=S.getVoices().find(v=>v.lang.startsWith('it'));if(v)u.voice=v;u.onend=u.onerror=()=>res();S.speak(u)});
+  async function play(L){
+    const my=++tok.current,alive=()=>tok.current===my;setBl([]);setFu([]);setRun(true);setPa(false);paR.current=false;folR.current=true;setFol(true);
+    for(const st of L.steps){
+      if(!alive())return;
+      const sp=talk(st.say);
+      const dr=(async()=>{for(const d of st.draw||[]){
+        const id=++uid.current,len=d.text.length+(d.note||'').length;setBl(b=>[...b,{...d,id,shown:0}]);
+        for(let i=1;i<=len;i++){while(paR.current&&alive())await sleep(100);if(!alive())return;setBl(b=>b.map(x=>x.id===id?{...x,shown:i}:x));await sleep((d.t==='title'?55:42)/spR.current)}
+        await sleep(250/spR.current)}})();
+      await Promise.all([sp,dr]);
+    }
+    if(alive()){setRun(false);setFu(L.followups||[])}
+  }
+  function stop(){tok.current++;window.speechSynthesis&&speechSynthesis.cancel();setRun(false);setPa(false);paR.current=false}
+  async function ask(q,file){
+    q=(q||'').trim();if(!q&&!file)return;stop();setInp('');setMsg('Preparo la spiegazione…');
+    window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    try{const image=file?await prep(file):null;
+      const r=await fetch('/api/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,image,ctx:ttl.current})}),L=await r.json();
+      if(!r.ok)throw Error(L.error||'Errore');setMsg('');ttl.current=L.title||'';play(L)}
+    catch(e){setMsg('Errore: '+e.message)}
+  }
+  function mic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return setMsg('Dettatura non disponibile (serve HTTPS e un browser compatibile).');const r=new SR();r.lang='it-IT';r.onresult=e=>ask(e.results[0][0].transcript);r.start()}
+  const pause=()=>{const v=!paR.current;paR.current=v;setPa(v);v?speechSynthesis.pause():speechSynthesis.resume()};
+  const mute=()=>{const v=!muR.current;muR.current=v;setMu(v);if(v)speechSynthesis.cancel()};
+  const speed=()=>{const L=[.75,1,1.25,1.5,2],v=L[(L.indexOf(spR.current)+1)%L.length]||1;spR.current=v;setSp(v);try{localStorage.setItem('sp',v)}catch(e){}};
+  const unf=()=>{folR.current=false;setFol(false)};
+  return html`<div class="tb">
+    <button class="rb" aria-label="Chiudi" onClick=${()=>{stop();setBl([]);setFu([]);setMsg('Chiedi un argomento, per esempio: i monomi.')}}>${ic(P.x)}</button><span style=${{flex:1}}></span>
+    <button class="rb sp" aria-label="Velocità di spiegazione" onClick=${speed}>${sp}×</button>
+    <button class="rb" aria-label="Voce" onClick=${mute}>${ic(mu?P.voff:P.von)}</button>
+    <button class="rb" aria-label="Pausa" disabled=${!run} onClick=${pause}>${ic(pa?P.play:P.pause)}</button>
+    <div class="av ${run&&!pa?'on':''}" aria-hidden="true"><div class="wv"><i></i><i></i><i></i></div></div></div>
+  <div id="board" ref=${bd} onWheel=${unf} onTouchMove=${unf}><div class="in" ref=${inn}>
+    ${msg&&html`<p class="msg">${msg}</p>`}
+    ${bl.map((b,i)=>html`<${Block} key=${b.id} b=${b} caret=${run&&i===bl.length-1?car:null}/>`)}
+    <div id="pen" ref=${pen} style=${{display:run?'block':'none'}}><svg width="30" height="44" viewBox="0 0 30 44"><path d="M21 2l8 5-15 25-9 5 2-10z" fill="#f2c14e" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 27l9 6-9 4z" fill="currentColor"/></svg><b>Prof</b></div>
+  </div></div>
+  ${!fol&&run&&html`<button class="seg" onClick=${()=>{folR.current=true;setFol(true)}}>${ic(P.down)} Segui</button>`}
+  <div class="bot">
+    ${fu.length?html`<div class="fu">${fu.map(f=>html`<button key=${f} onClick=${()=>ask(f)}>${f}</button>`)}</div>`:null}
+    <div class="row"><div class="inp"><input value=${inp} placeholder="Chiedi qualcosa…" onInput=${e=>setInp(e.target.value)} onKeyDown=${e=>e.key==='Enter'&&ask(inp)}/>
+      <label class="ib" aria-label="Foto">${ic(P.cam)}<input type="file" accept="image/*" hidden onChange=${e=>{const f=e.target.files[0];e.target.value='';f&&ask(inp,f)}}/></label>
+      <button class="snd" aria-label="Invia" onClick=${()=>ask(inp)}>${ic(P.send)}</button></div>
+      <button class="rb" aria-label="Detta" onClick=${mic}>${ic(P.mic)}</button></div></div>`;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script></body></html>
