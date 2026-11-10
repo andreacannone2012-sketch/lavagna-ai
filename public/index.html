@@ -98,10 +98,12 @@ function App(){
   async function ask(q,file){
     q=(q||'').trim();if(!q&&!file)return;stop();setInp('');setMsg('Preparo la spiegazione…');
     window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    const t0=Date.now(),iv=setInterval(()=>setMsg('Preparo la spiegazione… '+Math.round((Date.now()-t0)/1000)+'s'),1000),ac=new AbortController(),to=setTimeout(()=>ac.abort(),90000);
     try{const image=file?await prep(file):null;
-      const r=await fetch('/api/lesson',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,image,ctx:ttl.current})}),L=await r.json();
-      if(!r.ok)throw Error(L.error||'Errore');setMsg('');ttl.current=L.title||'';play(L)}
-    catch(e){setMsg('Errore: '+e.message)}
+      const r=await fetch('/api/lesson',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({q,image,ctx:ttl.current})}),L=await r.json();
+      if(!r.ok)throw Error(L.error||'Errore '+r.status);setMsg('');ttl.current=L.title||'';play(L)}
+    catch(e){console.error(e);setMsg('Errore: '+(e.name==='AbortError'?'nessuna risposta dal server dopo 90s':e.message)+'  —  dettagli su /api/logs')}
+    finally{clearInterval(iv);clearTimeout(to)}
   }
   function mic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return setMsg('Dettatura non disponibile (serve HTTPS e un browser compatibile).');const r=new SR();r.lang='it-IT';r.onresult=e=>ask(e.results[0][0].transcript);r.start()}
   const pause=()=>{const v=!paR.current;paR.current=v;setPa(v);v?speechSynthesis.pause():speechSynthesis.resume()};
