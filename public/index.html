@@ -4,9 +4,9 @@
 <link rel="stylesheet" href="/fonts/caveat/latin-600.css">
 <link rel="stylesheet" href="/fonts/patrick-hand/latin-400.css">
 <style>
-:root{--bg:#f5f2e9;--dot:#d9d3c2;--ink:#1f2430;--pu:#2f55b5;--hl:#f7e08a}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--dot:#2c2f37;--ink:#e9e6dd;--pu:#8fb0ff}}
-:root[data-theme="dark"]{--bg:#15171c;--dot:#2c2f37;--ink:#e9e6dd;--pu:#8fb0ff}
+:root{--bg:#f5f2e9;--dot:#d9d3c2;--ink:#1f2430;--pu:#2f55b5;--hl:#f7e08a;--ok:#2f7d4a;--cd:rgba(47,85,181,.07)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171c;--dot:#2c2f37;--ink:#e9e6dd;--pu:#8fb0ff;--ok:#7fd69b;--cd:rgba(143,176,255,.1)}}
+:root[data-theme="dark"]{--bg:#15171c;--dot:#2c2f37;--ink:#e9e6dd;--pu:#8fb0ff;--ok:#7fd69b;--cd:rgba(143,176,255,.1)}
 html,body,#root{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:'Patrick Hand',sans-serif;overflow:hidden}
 #board{position:absolute;inset:0;overflow-y:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 100px) 22px 170px;background-image:radial-gradient(var(--dot) 1.3px,transparent 1.4px);background-size:26px 26px}
@@ -45,6 +45,22 @@ sup{font-size:.6em;vertical-align:.55em}
 .seg svg{width:20px;height:20px}
 button:focus-visible{outline:2px solid var(--pu);outline-offset:2px}
 .msg{font:400 24px 'Patrick Hand';opacity:.75}
+.cd{width:100%;box-sizing:border-box;margin:12px 0;padding:14px 22px 16px;border:2.5px solid var(--ink);border-radius:16px 11px 18px 12px/12px 18px 11px 16px;background:var(--cd);text-align:left;animation:pop .3s}
+.ct{font:600 38px/1.1 Caveat,cursive;color:var(--pu);margin-bottom:6px}
+.cb{font:400 24px/1.35 'Patrick Hand'}
+.ce{margin-top:10px;padding:8px 14px;border:2px dashed var(--ok);border-radius:10px;font:400 22px/1.35 'Patrick Hand'}
+.ce b,.exb b{color:var(--ok);font:600 28px Caveat,cursive;margin-right:6px}
+.exb{border:2.5px dashed var(--ok);font:400 23px/1.35 'Patrick Hand'}
+.cd ul{margin:4px 0 0;padding-left:26px;font:400 23px/1.4 'Patrick Hand'}
+.mp{margin:12px 0}
+.bx.mc{margin:0;max-width:100%;background:var(--cd);border-color:var(--pu);font-size:27px;text-align:left}
+.mt{margin-left:26px}
+.mn{position:relative;padding:14px 0 0 38px}
+.mn:not(:last-child)::after{content:'';position:absolute;left:0;top:0;bottom:0;border-left:2.5px solid var(--ink)}
+.hd{position:relative}
+.hd::before{content:'';position:absolute;left:-38px;top:-14px;width:36px;height:calc(50% + 14px);border:0 solid var(--ink);border-left-width:2.5px;border-bottom-width:2.5px;border-bottom-left-radius:12px}
+.mn .bx{margin:0;max-width:100%;text-align:left;font-size:21px;padding:8px 14px}
+.rl{display:block;font:600 22px/1.1 Caveat,cursive;color:var(--pu)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important}}
 
 .sp{font:700 14px system-ui,sans-serif}
@@ -65,11 +81,33 @@ const {useState,useRef,useLayoutEffect}=React,html=htm.bind(React.createElement)
 const fmt=s=>s.split(/(\^[0-9a-z]+)/gi).map((p,i)=>p[0]==='^'&&p.length>1?html`<sup key=${i}>${p.slice(1)}</sup>`:p);
 const AL=html`<svg class="al" viewBox="0 0 34 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M32 10H3M10 3L3 10l7 7"/></svg>`;
 function Block({b,caret}){
+  if(b.segs)return html`<${Rich} b=${b} caret=${caret}/>`;
   const n=b.shown,len=b.text.length,a=b.text.slice(0,n),nt=(b.note||'').slice(0,Math.max(0,n-len));
   const c=caret?html`<i class="cr" ref=${caret}></i>`:null;
   if(b.t==='box')return html`<div>${b.arrow&&html`<svg class="ar" viewBox="0 0 20 26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 1v22M4 17l6 7 6-7"/></svg>`}<div class="bx">${fmt(a)}${c}</div></div>`;
   if(b.t==='title')return html`<div class="t">${fmt(a)}${c}${n>=len&&html`<svg class="ul" viewBox="0 0 300 12" preserveAspectRatio="none"><path pathLength="1" d="M3 8Q80 2 150 7T297 5" stroke="var(--pu)" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`}</div>`;
   return html`<div><div class="x ${b.t==='small'?'small':''} ${b.t==='hl'?'hl':b.c||''}">${fmt(a)}${n>=len&&b.note?AL:null}${nt&&html`<span class="n">${nt}</span>`}${c}</div></div>`;
+}
+const A=x=>Array.isArray(x)?x:[];
+const segsOf=d=>{
+  if(d.t==='def')return[String(d.text||''),String(d.body||''),String(d.ex||'')];
+  if(d.t==='ex')return[String(d.body||d.text||'')];
+  if(d.t==='list')return[String(d.text||''),...A(d.items).map(String)];
+  if(d.t==='map')return[String(d.text||''),...A(d.nodes).flatMap(n=>[String(n.rel||''),String(n.text||''),...A(n.sub).flatMap(s=>[String(s.rel||''),String(s.text||'')])])];
+  return null};
+function Rich({b,caret}){
+  const sg=b.segs;let n=b.shown;
+  const sl=sg.map(s=>{const k=Math.max(0,Math.min(s.length,n));n-=s.length;return s.slice(0,k)});
+  let ci=sl.findIndex((x,j)=>x.length>0&&x.length<sg[j].length);
+  if(ci<0)sl.forEach((x,j)=>{if(x)ci=j});
+  let q=0;const T=()=>{const j=q++;return{r:sl[j],v:html`${fmt(sl[j])}${j===ci&&caret?html`<i class="cr" ref=${caret}></i>`:null}`}};
+  if(b.t==='def'){const a=T(),d=T(),e=T();return html`<div class="cd"><div class="ct">${a.v}</div>${d.r?html`<div class="cb">${d.v}</div>`:null}${e.r?html`<div class="ce"><b>Esempio</b>${e.v}</div>`:null}</div>`}
+  if(b.t==='ex'){const e=T();return html`<div class="cd exb"><b>Esempio</b>${e.v}</div>`}
+  if(b.t==='list'){const a=T();const it=A(b.items).map((_,i)=>{const x=T();return x.r?html`<li key=${i}>${x.v}</li>`:null});return html`<div class="cd"><div class="ct">${a.v}</div><ul>${it}</ul></div>`}
+  const c=T();
+  const br=arr=>html`<div class="mt">${arr.map((nd,i)=>{const r=T(),x=T(),sub=br2(nd.sub);return(r.r||x.r)?html`<div class="mn" key=${i}><div class="hd"><div class="bx">${r.r?html`<small class="rl">${r.v}</small>`:null}${x.v}</div></div>${sub}</div>`:null})}</div>`;
+  const br2=s=>A(s).length?br(A(s)):null;
+  return html`<div class="mp">${c.r?html`<div class="bx mc">${c.v}</div>`:null}${br2(b.nodes)}</div>`;
 }
 async function prep(f){const b=await createImageBitmap(f),k=Math.min(1,1280/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=b.width*k;c.height=b.height*k;c.getContext('2d').drawImage(b,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85)}
 function App(){
@@ -87,8 +125,8 @@ function App(){
       if(!alive())return;
       const sp=talk(st.say);
       const dr=(async()=>{for(const d of st.draw||[]){
-        const id=++uid.current,len=d.text.length+(d.note||'').length;setBl(b=>[...b,{...d,id,shown:0}]);
-        for(let i=1;i<=len;i++){while(paR.current&&alive())await sleep(100);if(!alive())return;setBl(b=>b.map(x=>x.id===id?{...x,shown:i}:x));await sleep((d.t==='title'?55:42)/spR.current)}
+        const sg=segsOf(d),id=++uid.current,len=sg?sg.reduce((a,x)=>a+x.length,0):(d.text||'').length+(d.note||'').length;setBl(b=>[...b,{...d,segs:sg,id,shown:0}]);
+        for(let i=1;i<=len;i++){while(paR.current&&alive())await sleep(100);if(!alive())return;setBl(b=>b.map(x=>x.id===id?{...x,shown:i}:x));await sleep((d.t==='title'?55:sg?16:42)/spR.current)}
         await sleep(250/spR.current)}})();
       await Promise.all([sp,dr]);
     }
