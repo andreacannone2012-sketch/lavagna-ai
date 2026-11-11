@@ -3,9 +3,17 @@ const {GEMINI_API_KEY:GK,GROQ_API_KEY:QK,GEMINI_MODEL='gemini-3.8-flash,gemini-3
 const R=p=>path.join(__dirname,p);
 const MAP={'/':'public/index.html','/vendor/react.js':'node_modules/react/umd/react.production.min.js','/vendor/react-dom.js':'node_modules/react-dom/umd/react-dom.production.min.js','/vendor/htm.js':'node_modules/htm/dist/htm.umd.js'};
 const TYPES={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.woff2':'font/woff2','.woff':'font/woff'};
-const SYS='Sei un tutor che spiega alla lavagna, in italiano, a studenti. Rispondi SOLO con JSON: {"title":"titolo breve","steps":[{"say":"1-2 frasi da pronunciare","draw":[{"t":"title|text|small|box|hl","text":"...","note":"etichetta breve opzionale, solo per text","c":"pu|gr opzionale","arrow":true}]}],"followups":["3 proposte brevi per approfondire"]}. '+
-'Regole: 5-9 passi. Il primo passo scrive il titolo (t:title). "say" deve essere pronunciabile: scrivi numeri e formule a parole (es. "tre x al quadrato"), mai simboli come ^ o *. "text" e cio che si scrive: formule brevi con ^ per gli esponenti (3x^2), massimo 30 caratteri per blocco, spezza in piu blocchi. Usa box per definizioni e schemi (arrow:true se segue un altro box), hl per il risultato finale, c:"pu" per titoletti come "Somma i simili:". Niente markdown, niente LaTeX.';
-function parse(t){const L=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));if(!Array.isArray(L.steps)||!L.steps.length)throw Error('Risposta AI non valida');return L}
+const SYS=`Sei un tutor che spiega alla lavagna, in italiano, a studenti. Rispondi SOLO con JSON: {"title":"titolo breve","steps":[{"say":"2-3 frasi da pronunciare","draw":[BLOCCHI]}],"followups":["3 proposte brevi per approfondire"]}.
+Tipi di blocco (campo t):
+- {"t":"title","text":"..."} titolo, solo nel primo passo.
+- {"t":"text|small|hl","text":"...","note":"etichetta breve opzionale","c":"pu|gr opzionale"} righe scritte a mano; hl per il risultato finale.
+- {"t":"box","text":"...","arrow":true} riquadro breve; arrow se segue un altro box.
+- {"t":"def","text":"Termine","body":"definizione completa, 1-3 frasi, max 260 caratteri","ex":"esempio concreto opzionale, max 160 caratteri"} RIQUADRO GRANDE con definizione.
+- {"t":"ex","body":"esempio concreto o svolto, max 220 caratteri"} riquadro esempio.
+- {"t":"map","text":"concetto centrale","nodes":[{"text":"max 40 caratteri","rel":"legame, max 22 caratteri, es. si divide in","sub":[{"text":"...","rel":"..."}]}]} MAPPA CONCETTUALE ad albero: 3-6 nodi, sub opzionali (max 3 per nodo).
+- {"t":"list","text":"Riepilogo","items":["punto breve"]} elenco di 3-6 punti da max 70 caratteri.
+Regole: 8-12 passi, ricchi di contenuto, mai risposte scarne. Per argomenti teorici usa def per OGNI termine chiave, ex per esempi concreti, almeno una map che colleghi i concetti, e chiudi con una list di riepilogo. Per esercizi e calcoli svolgi passo passo con text/box/hl e usa def/ex solo se servono. Se lo studente chiede una mappa concettuale, fai una map grande (fino a 6 nodi con sub) e pochi altri blocchi. "say" spiega a voce il contenuto del passo senza rileggerlo parola per parola, ed e pronunciabile: numeri e formule a parole (es. "tre x al quadrato"), mai simboli come ^ o *. Nei campi scritti usa ^ per gli esponenti (3x^2), niente markdown, niente LaTeX. Per text/small/hl max 30 caratteri per blocco: spezza in piu blocchi. Tra i followups includi sempre una proposta tipo "Mappa concettuale su ...".`;
+function parse(t){const L=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));if(!Array.isArray(L.steps)||!L.steps.length)throw Error('Risposta AI non valida');L.steps.forEach(s=>{s.say=String(s.say||'');s.draw=(Array.isArray(s.draw)?s.draw:[]).filter(d=>d&&typeof d==='object'&&d.t).map(d=>{if(['title','text','small','box','hl'].includes(d.t))d.text=String(d.text??'');return d})});return L}
 const MODELS=GEMINI_MODEL.split(',').map(x=>x.trim()).filter(Boolean);
 const TH=process.env.GEMINI_THINKING??'low';
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
