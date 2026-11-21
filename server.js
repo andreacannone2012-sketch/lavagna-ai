@@ -121,10 +121,16 @@ async function geminiFlusso(p,img,onTesto){
   }
   throw last||Error('Nessun modello configurato in GEMINI_MODEL');
 }
+const MODI={
+  esempio:'dai 2 esempi concreti e diversi (uno quotidiano, uno svolto con i numeri) usando ex e text/hl, senza ripetere la teoria.',
+  approfondisci:'approfondisci con def per i dettagli e le sfumature non ancora trattate, e un ex, senza ripetere cio che e gia stato detto.',
+  esercizio:'proponi UN esercizio adatto al livello e svolgilo passo passo con text/box/hl, spiegando a voce ogni scelta; chiudi con un hl col risultato.',
+  riassunto:'fai un riassunto: un solo blocco list con i 4-6 concetti chiave (max 70 caratteri l uno) e una frase a voce di ripasso; niente nuovi concetti.'
+};
 function promptLezione(b){
-  const {q:text,image,ctx,append}=b;
+  const {q:text,image,ctx,append,modo}=b;
   return (ctx?'Argomento precedente: '+ctx+'\n':'')
-    +(append?'Stai AGGIUNGENDO passi a una lezione gia in corso: 2-4 passi, SENZA blocco title e SENZA map, spiega in modo piu semplice partendo da un esempio concreto.\n':'')
+    +(append?'Stai AGGIUNGENDO passi a una lezione gia in corso: 2-4 passi, SENZA blocco title e SENZA map, '+(MODI[modo]||'spiega in modo piu semplice partendo da un esempio concreto.')+'\n':'')
     +(image?'Lo studente allega la foto di un esercizio: spiegane la risoluzione passo passo.\n':'')+'Richiesta: '+(text||'');
 }
 http.createServer(async(q,s)=>{
